@@ -17,7 +17,8 @@ import './App.css'
  */
 
 export default function App() {
-    const [notes, setNotes] = React.useState(JSON.parse(localStorage.getItem("notes")) ,[])
+    const [notes, setNotes] = React.useState(
+        ()=> JSON.parse(localStorage.getItem("notes")) || [])
     const [currentNoteId, setCurrentNoteId] = React.useState(
         (notes[0] && notes[0].id) || ""
     )
@@ -36,13 +37,27 @@ export default function App() {
     }
     
     function updateNote(text) {
-        setNotes(oldNotes => oldNotes.map(oldNote => {
-            return oldNote.id === currentNoteId
-                ? { ...oldNote, body: text }
-                : oldNote
-        }))
+      setNotes(oldNotes => {
+        const newNotes = []
+        notes.forEach(note => {
+          if (note.id === currentNoteId) {
+            newNotes.unshift({ ...note, body: text })
+          } else {
+            newNotes.push(note)
+          }
+        })
+  
+        return newNotes;
+      })
     }
     
+    function deleteNote(event, noteId) {
+        event.stopPropagation()
+        setNotes(prevNotes => {
+            return prevNotes.filter(note => note.id !== noteId)
+        })
+    }
+
     function findCurrentNote() {
         return notes.find(note => {
             return note.id === currentNoteId
@@ -64,6 +79,7 @@ export default function App() {
                     currentNote={findCurrentNote()}
                     setCurrentNoteId={setCurrentNoteId}
                     newNote={createNewNote}
+                    deleteNote={deleteNote}
                 />
                 {
                     currentNoteId && 
